@@ -107,8 +107,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
-            capture="environment"
+            accept="image/*,.heic,.heif"
             onChange={handleFileChange}
             className="hidden"
             id="photo-upload-input"

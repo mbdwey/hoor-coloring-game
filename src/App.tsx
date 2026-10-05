@@ -56,15 +56,21 @@ export function App() {
     }
   }, []);
 
-  // Load an image from a URL or Data URI
+  // Load an image from a URL, Blob URI, or Data URI
   const loadImageFromUri = useCallback((uri: string, options: ProcessingOptions) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // Only set crossOrigin for external http(s) URLs; setting it on data: or blob: causes CORS blocks in Chromium/WebKit
+    if (!uri.startsWith('data:') && !uri.startsWith('blob:')) {
+      img.crossOrigin = 'anonymous';
+    }
+
     img.onload = () => {
       processImageElement(img, options);
     };
-    img.onerror = () => {
-      console.error('Failed to load image from URI');
+    img.onerror = (e) => {
+      console.error('Failed to load image from URI:', uri.slice(0, 100), e);
+      alert('Could not load image. Please try a different drawing or photo.');
+      setIsProcessing(false);
     };
     img.src = uri;
   }, [processImageElement]);
@@ -78,19 +84,26 @@ export function App() {
 
   // Handle user uploaded photo
   const handleUploadFile = (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file (JPG, PNG, HEIC, etc.)');
+    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif|bmp|svg)$/i.test(file.name);
+    if (!isImage) {
+      alert('Please upload an image file (JPG, PNG, WebP, SVG, etc.)');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const uri = e.target?.result as string;
-      if (uri) {
-        loadImageFromUri(uri, processingOptions);
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const blobUrl = URL.createObjectURL(file);
+      loadImageFromUri(blobUrl, processingOptions);
+    } catch {
+      // Fallback to FileReader
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const uri = e.target?.result as string;
+        if (uri) {
+          loadImageFromUri(uri, processingOptions);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Re-process current image when processing settings change

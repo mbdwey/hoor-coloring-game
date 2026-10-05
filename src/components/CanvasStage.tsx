@@ -26,6 +26,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(({
   const colorCanvasRef = useRef<HTMLCanvasElement>(null);
   const lineCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Layout dimensions calculated to perfectly preserve aspect ratio without CSS collapsing
+  const [stageDimensions, setStageDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+
   // Undo Stack (keeps up to 25 full canvas states)
   const undoStackRef = useRef<ImageData[]>([]);
   const [canUndoState, setCanUndoState] = useState(false);
@@ -38,10 +41,51 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(({
     onUndoAvailabilityChange?.(canUndo);
   }, [onUndoAvailabilityChange]);
 
-  // Initialize and redraw canvases whenever a new sketch is loaded
+  // Keep stage dimensions responsive and aspect-ratio locked
   useEffect(() => {
-    if (!sketch) return;
+    const updateDimensions = () => {
+      if (!containerRef.current || !sketch) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
 
+      const padding = 24; // 12px padding on each side
+      const availW = Math.max(100, rect.width - padding);
+      const availH = Math.max(100, rect.height - padding);
+
+      const sketchAspect = sketch.width / sketch.height;
+      const availAspect = availW / availH;
+
+      let w: number;
+      let h: number;
+
+      if (sketchAspect > availAspect) {
+        w = availW;
+        h = Math.round(availW / sketchAspect);
+      } else {
+        h = availH;
+        w = Math.round(availH * sketchAspect);
+      }
+
+      setStageDimensions({ width: w, height: h });
+    };
+
+    updateDimensions();
+
+    const ro = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      ro.observe(containerRef.current);
+    }
+    window.addEventListener('resize', updateDimensions);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, [sketch]);
+
+  // Draw sketch line art onto canvas whenever sketch changes
+  const renderSketch = useCallback(() => {
+    if (!sketch) return;
     const { width, height, lineArtImageData } = sketch;
 
     // Reset undo history
@@ -72,12 +116,18 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(({
     }
   }, [sketch, updateCanUndo]);
 
+  useEffect(() => {
+    renderSketch();
+  }, [renderSketch]);
+
   // Handle tap / click for coloring
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!sketch || !colorCanvasRef.current) return;
 
     const canvas = colorCanvasRef.current;
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
@@ -196,13 +246,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center overflow-hidden p-2 sm:p-4 select-none touch-none"
+      className="relative w-full h-full flex items-center justify-center overflow-hidden p-3 select-none touch-none"
     >
-      {sketch ? (
+      {sketch && stageDimensions.width > 0 ? (
         <div 
-          className="relative max-w-full max-h-full shadow-2xl rounded-2xl overflow-hidden bg-white border-4 border-amber-300"
+          className="relative shadow-2xl rounded-2xl overflow-hidden bg-white border-4 border-amber-300 transition-all duration-150"
           style={{
-            aspectRatio: `${sketch.width} / ${sketch.height}`,
+            width: `${stageDimensions.width}px`,
+            height: `${stageDimensions.height}px`,
           }}
         >
           {/* Base Paper Canvas (pure white background) */}
@@ -227,7 +278,9 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(({
           <SparkleOverlay sparkles={sparkles} onComplete={handleSparkleComplete} />
         </div>
       ) : (
-        <div className="text-center text-slate-400">Loading drawing...</div>
+        <div className="text-center text-amber-800 font-bold animate-pulse">
+          Loading coloring page... ✨
+        </div>
       )}
     </div>
   );

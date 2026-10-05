@@ -26,15 +26,22 @@ export async function processSketchImage(
   } = options;
 
   // 1. Calculate downscaled dimensions preserving aspect ratio
-  let targetWidth = source.width;
-  let targetHeight = source.height;
+  const rawW = ('naturalWidth' in source && (source as HTMLImageElement).naturalWidth > 0)
+    ? (source as HTMLImageElement).naturalWidth
+    : source.width || 600;
+  const rawH = ('naturalHeight' in source && (source as HTMLImageElement).naturalHeight > 0)
+    ? (source as HTMLImageElement).naturalHeight
+    : source.height || 600;
+
+  let targetWidth = rawW;
+  let targetHeight = rawH;
 
   if (targetWidth > maxDimension || targetHeight > maxDimension) {
     if (targetWidth > targetHeight) {
-      targetHeight = Math.round((targetHeight * maxDimension) / targetWidth);
+      targetHeight = Math.max(100, Math.round((targetHeight * maxDimension) / targetWidth));
       targetWidth = maxDimension;
     } else {
-      targetWidth = Math.round((targetWidth * maxDimension) / targetHeight);
+      targetWidth = Math.max(100, Math.round((targetWidth * maxDimension) / targetHeight));
       targetHeight = maxDimension;
     }
   }
@@ -140,7 +147,8 @@ export async function processSketchImage(
       const pixelVal = smoothedGray[grayRow + x];
 
       // A pixel is a line if it is significantly darker than the local neighborhood average
-      if (pixelVal < localMean * thresholdRatio && pixelVal < 210) {
+      // OR if it is inherently dark (e.g. solid marker/ink where the whole local window is dark)
+      if (pixelVal < 70 || (pixelVal < localMean * thresholdRatio && pixelVal < 215)) {
         binaryMask[grayRow + x] = 1;
       } else {
         binaryMask[grayRow + x] = 0;

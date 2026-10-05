@@ -7,9 +7,14 @@ export interface SampleSketch {
   svgDataUri: string;
 }
 
-// Helper to encode SVG string to Data URI
+// Helper to encode SVG string to Data URI with base64 for cross-browser reliability
 function svgToUri(svgString: string): string {
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svgString.trim())}`;
+  const clean = svgString.trim();
+  try {
+    return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(clean)))}`;
+  } catch {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(clean)}`;
+  }
 }
 
 export const SAMPLE_SKETCHES: SampleSketch[] = [
