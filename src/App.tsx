@@ -10,6 +10,7 @@ import { SAMPLE_SKETCHES, type SampleSketch } from './data/sampleSketches';
 import { processSketchImage, type ProcessedSketch, type ProcessingOptions } from './utils/imageProcessing';
 import { sound } from './utils/audio';
 import { welcomeVoice } from './utils/welcomeAudio';
+import { WelcomeAudioBanner } from './components/WelcomeAudioBanner';
 
 export function App() {
   const canvasRef = useRef<CanvasStageHandle>(null);
@@ -258,6 +259,9 @@ export function App() {
         isDragging={isDragging}
         isProcessing={isProcessing}
       />
+
+      {/* Auto-plays or prompts if browser blocks cold audio autoplay */}
+      <WelcomeAudioBanner />
     </div>
   );
 }
