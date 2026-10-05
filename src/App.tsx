@@ -10,7 +10,6 @@ import { SAMPLE_SKETCHES, type SampleSketch } from './data/sampleSketches';
 import { processSketchImage, type ProcessedSketch, type ProcessingOptions } from './utils/imageProcessing';
 import { sound } from './utils/audio';
 import { welcomeVoice } from './utils/welcomeAudio';
-import { WelcomeAudioBanner } from './components/WelcomeAudioBanner';
 
 export function App() {
   const canvasRef = useRef<CanvasStageHandle>(null);
@@ -22,8 +21,8 @@ export function App() {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
-  // Modals
-  const [isSampleModalOpen, setIsSampleModalOpen] = useState<boolean>(false);
+  // Modals (Sample sketch picker is open by default on launch!)
+  const [isSampleModalOpen, setIsSampleModalOpen] = useState<boolean>(true);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
 
   // Audio & Processing Settings
@@ -243,7 +242,14 @@ export function App() {
       <SamplePickerModal
         isOpen={isSampleModalOpen}
         onClose={() => setIsSampleModalOpen(false)}
-        onSelectSketch={handleSelectSketch}
+        onSelectSketch={(selected) => {
+          handleSelectSketch(selected);
+          welcomeVoice.play();
+        }}
+        onUploadImage={(file) => {
+          handleUploadFile(file);
+          welcomeVoice.play();
+        }}
       />
 
       <SettingsModal
@@ -259,9 +265,6 @@ export function App() {
         isDragging={isDragging}
         isProcessing={isProcessing}
       />
-
-      {/* Auto-plays or prompts if browser blocks cold audio autoplay */}
-      <WelcomeAudioBanner />
     </div>
   );
 }

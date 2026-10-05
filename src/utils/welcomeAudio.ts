@@ -1,14 +1,10 @@
-// Welcome Voice greeting player: Maximizes chances of instant autoplay on page load
-// with seamless fallback to first user gesture (touch, click, key).
-
-type AutoplayStateListener = (isBlocked: boolean) => void;
+// Welcome Voice greeting player: Silently auto-plays on load
+// with immediate fallback to the first user tap/click anywhere on the screen.
 
 class WelcomeVoicePlayer {
   private audio: HTMLAudioElement | null = null;
   private hasPlayed: boolean = false;
   private isMuted: boolean = false;
-  private listeners: Set<AutoplayStateListener> = new Set();
-  public isBlocked: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -37,25 +33,12 @@ class WelcomeVoicePlayer {
     });
   }
 
-  subscribe(listener: AutoplayStateListener) {
-    this.listeners.add(listener);
-    listener(this.isBlocked);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  private notify() {
-    this.listeners.forEach((l) => l(this.isBlocked));
-  }
-
   // Attempt to play immediately on page load
   initAutoplay() {
     if (typeof window === 'undefined') return;
     this.bindAudioElement();
     if (!this.audio || this.hasPlayed || this.isMuted) return;
 
-    // Force play immediately
     const startPlay = () => {
       if (!this.audio || this.hasPlayed || this.isMuted) return;
 
@@ -64,21 +47,15 @@ class WelcomeVoicePlayer {
         promise
           .then(() => {
             this.hasPlayed = true;
-            this.isBlocked = false;
-            this.notify();
             this.removeInteractionListeners();
           })
-          .catch((err) => {
-            console.log('Browser autoplay policy waiting for user gesture:', err.name);
-            // Autoplay was blocked by browser security policy
-            this.isBlocked = true;
-            this.notify();
+          .catch(() => {
+            // Autoplay was restricted by browser; queue for first user tap/click
             this.attachInteractionListeners();
           });
       }
     };
 
-    // If audio is already loaded/ready, play now; otherwise listen for canplay
     if (this.audio.readyState >= 2) {
       startPlay();
     } else {
@@ -87,7 +64,7 @@ class WelcomeVoicePlayer {
     }
   }
 
-  // Force play (e.g. clicking mascot or welcome banner)
+  // Force play (e.g. selecting picture or clicking mascot)
   play() {
     this.bindAudioElement();
     if (!this.audio) return;
@@ -98,8 +75,6 @@ class WelcomeVoicePlayer {
       .play()
       .then(() => {
         this.hasPlayed = true;
-        this.isBlocked = false;
-        this.notify();
         this.removeInteractionListeners();
       })
       .catch((err) => {
