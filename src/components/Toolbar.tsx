@@ -17,6 +17,7 @@ interface ToolbarProps {
   onOpenSettings: () => void;
   onSave: () => void;
   onUploadImage: (file: File) => void;
+  onPlayWelcomeVoice?: () => void;
   isProcessing: boolean;
 }
 
@@ -28,6 +29,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onOpenSettings,
   onSave,
   onUploadImage,
+  onPlayWelcomeVoice,
   isProcessing,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,20 +48,29 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   return (
     <header className="w-full bg-white/95 backdrop-blur-md border-b-4 border-amber-200 shadow-md px-3 py-2 z-20">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
-        {/* Logo / Title */}
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-amber-400 via-rose-400 to-indigo-500 flex items-center justify-center shadow-md animate-pulse-subtle">
+        {/* Logo / Title (clickable to hear Hoor say Hi) */}
+        <button
+          type="button"
+          onClick={onPlayWelcomeVoice}
+          title="Click to hear Hoor say Hi! 👧✨"
+          className="flex items-center gap-2 group cursor-pointer text-left active:scale-95 transition-transform"
+        >
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-amber-400 via-rose-400 to-indigo-500 flex items-center justify-center shadow-md group-hover:scale-105 group-active:scale-90 transition-transform">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div className="hidden xs:block sm:block">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-amber-950 leading-none">
-              Hoor <span className="text-rose-500">Coloring Game</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-amber-950 leading-none flex items-center gap-1.5">
+              <span>Hoor</span>
+              <span className="text-rose-500">Coloring Game</span>
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-300">
+                🔊 Hi!
+              </span>
             </h1>
             <p className="text-[10px] sm:text-xs font-semibold text-amber-800/80 uppercase tracking-wider">
               Photo to Coloring Book
             </p>
           </div>
-        </div>
+        </button>
 
         {/* Center / Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">

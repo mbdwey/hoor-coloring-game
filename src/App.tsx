@@ -9,6 +9,7 @@ import { DropZoneOverlay } from './components/DropZoneOverlay';
 import { SAMPLE_SKETCHES, type SampleSketch } from './data/sampleSketches';
 import { processSketchImage, type ProcessedSketch, type ProcessingOptions } from './utils/imageProcessing';
 import { sound } from './utils/audio';
+import { welcomeVoice } from './utils/welcomeAudio';
 
 export function App() {
   const canvasRef = useRef<CanvasStageHandle>(null);
@@ -75,10 +76,11 @@ export function App() {
     img.src = uri;
   }, [processImageElement]);
 
-  // Initial load: Load default sample sketch (Dino Buddy)
+  // Initial load: Load default sample sketch & start welcome greeting
   useEffect(() => {
     const defaultSample = SAMPLE_SKETCHES[0];
     loadImageFromUri(defaultSample.svgDataUri, processingOptions);
+    welcomeVoice.initAutoplay();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -119,6 +121,7 @@ export function App() {
     const next = !soundEnabled;
     setSoundEnabled(next);
     sound.enabled = next;
+    welcomeVoice.setMuted(!next);
     if (next) sound.playChime(660);
   };
 
@@ -215,6 +218,7 @@ export function App() {
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onSave={handleSave}
         onUploadImage={handleUploadFile}
+        onPlayWelcomeVoice={() => welcomeVoice.play()}
         isProcessing={isProcessing}
       />
 
