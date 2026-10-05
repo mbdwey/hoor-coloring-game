@@ -1,6 +1,6 @@
-# 🎨 Magic Color! — Sketch to Digital Coloring Game for Children
+# 🎨 Hoor Coloring Game — Sketch to Digital Coloring for Kids
 
-A modern web application that turns photos of physical hand-drawn sketches into an interactive digital coloring game for kids.
+A fun, interactive web application that turns photos of physical hand-drawn sketches into an interactive digital coloring game for children.
 
 ---
 

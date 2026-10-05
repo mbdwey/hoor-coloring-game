@@ -53,7 +53,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </div>
           <div className="hidden xs:block sm:block">
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-amber-950 leading-none">
-              Magic <span className="text-rose-500">Color!</span>
+              Hoor <span className="text-rose-500">Coloring Game</span>
             </h1>
             <p className="text-[10px] sm:text-xs font-semibold text-amber-800/80 uppercase tracking-wider">
               Photo to Coloring Book

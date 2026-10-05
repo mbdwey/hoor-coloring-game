@@ -144,7 +144,7 @@ export function App() {
 
       // Trigger download
       const link = document.createElement('a');
-      link.download = `my-coloring-masterpiece-${Date.now()}.png`;
+      link.download = `hoor-masterpiece-${Date.now()}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
